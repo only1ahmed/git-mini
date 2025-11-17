@@ -5,14 +5,11 @@
 #include <sstream>
 #include "util/StringUtil.h"
 
-const std::string EXT;
+const std::string EXT = "exit";
 
 
 std::pair<Operation, std::vector<std::string>> CLI::parse(std::string command) const {
 
-    if (not startsWith(command, this->commandsPrefix)) {
-        return {Operation::ext,{}};
-    }
     if(startsWith(toLowerMask(command), EXT)){
         return {Operation::ext,{}};
     }
@@ -85,5 +82,6 @@ void CLI::run() {
         if(op.first == Operation::ext){
             break;
         }
+        navigate(op);
     }
 }
