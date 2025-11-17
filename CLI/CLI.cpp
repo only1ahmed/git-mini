@@ -13,12 +13,15 @@ std::pair<Operation, std::vector<std::string>> CLI::parse(std::string command) c
     if(startsWith(toLowerMask(command), EXT)){
         return {Operation::ext,{}};
     }
-
+    if(not startsWith(toLowerMask(command), this->commandsPrefix)){
+        return {Operation::ongoing,{}};
+    }
     std::string gitCommand = command.substr((int)(this->commandsPrefix.size()));
-
     if(gitCommand.empty()){
+        // TODO: add help menu here
         return {Operation::ongoing, {}};
     }
+
 
     std::istringstream iss(gitCommand);
     std::vector<std::string> args;
@@ -65,7 +68,7 @@ void CLI::navigate(std::pair<Operation, std::vector<std::string>> code) {
             break;
         }
         default:
-            std::cout << "Unknown operation!\n";
+            std::cout << "Unknown command!\n";
             break;
     }
 }
@@ -77,7 +80,7 @@ void CLI::run() {
 
     while(true){
         std::cout << "Welcome to gitmini: ";
-        std::cin >> cmd;
+        getline(std::cin, cmd);
         std::pair<Operation, std::vector<std::string>> op = parse(cmd);
         if(op.first == Operation::ext){
             break;

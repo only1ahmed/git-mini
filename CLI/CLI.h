@@ -17,7 +17,7 @@ enum class Operation{
 };
 class CLI{
 private:
-    std::string commandsPrefix = "gitmini ";
+    std::string commandsPrefix = "gitmini";
     const std::map<std::string, Operation> stringToOp = {
             {"init", Operation::init},
             {"status", Operation::status},
