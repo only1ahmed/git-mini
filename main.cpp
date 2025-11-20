@@ -1,12 +1,15 @@
 #include <iostream>
-#include "CLI/CLI.h"
-using namespace std;
+#include <filesystem>
+#include "core/gitmini.h"
+
+//int main(int argc, char *argv[]) {
+//
+//}
+
 int main() {
-    CLI c;
-    c.run();
 
-//    string s= "hello";
-//    string z = s.substr(5);
-//    cout << z;
+    gitmini git;
+
+
+    return 0;
 }
-
