@@ -11,16 +11,19 @@ namespace fs = std::filesystem;
 class gitmini {
 
 private:
-    fs::path baseFolderPath = ".gitmini";
-    fs::path stagedFilePath = baseFolderPath / "staged";
-    fs::path ignoredFilesPath = ".gitminiignore";
-    std::unordered_set<std::string> stagedFiles;
-    std::unordered_set<std::string> ignoredFiles;
+    std::unordered_set<fs::path> stagedFiles;
+    std::unordered_set<fs::path> ignoredFiles;
 
-
-    //TODO
-    // Note: you need to figure out somehow to get the current directory from the CLI.
 public:
+    inline static const fs::path baseFolderPath = ".gitmini";
+    inline static const fs::path ignoredFilesPath = ".gitminiignore";
+    inline static const fs::path objectsFolderPath = baseFolderPath / "objects";
+    inline static const fs::path localRefsFolderPath = baseFolderPath / "refs";
+    inline static const fs::path localHeadsFolderPath = localRefsFolderPath / "heads";
+    inline static const fs::path infoFolder = baseFolderPath / "info";
+    inline static const fs::path stageTracer = infoFolder / "staged";
+    inline static const fs::path branchTracer = infoFolder / "current";
+
     gitmini();
 
 //    gitmini(std::string);
@@ -32,6 +35,9 @@ public:
 
     void init();
 
-    void add(const std::vector<std::string> &);
+    void add(const std::vector<fs::path> &);
+
+    void commit(const std::vector<std::string> &);
+
 
 };

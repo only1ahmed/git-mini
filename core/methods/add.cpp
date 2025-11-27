@@ -11,7 +11,8 @@ void navigate() {
 
 }
 
-void gitmini::add(const std::vector<std::string> &args) {
+//TODO: apply gitmini diff to know whether a file had changes or not before staging it.
+void gitmini::add(const std::vector<fs::path> &args) {
     if (args.empty()) {
         std::cerr << "Error: No files were provided" << std::endl;
         return;
@@ -19,12 +20,14 @@ void gitmini::add(const std::vector<std::string> &args) {
     if (*args.begin() == "*") {
 
     }
-    std::ofstream outFile(this->stagedFilePath);
+    std::ofstream outFile(gitmini::stageTracer);
 
-    for (const auto &filename: args) {
-        if ((this->stagedFiles.count(filename) < 1) && (this->ignoredFiles.count(filename) < 1)) {
-            outFile << filename + '\n';
-            this->stagedFiles.insert(filename);
+    for (const auto &filePath: args) {
+        if ((this->stagedFiles.count(filePath) < 1) && (this->ignoredFiles.count(filePath) < 1) &&
+            fs::exists(filePath)) {
+            outFile << filePath.string() + '\n';
+            this->stagedFiles.insert(filePath);
         }
     }
+    outFile.flush();
 }
