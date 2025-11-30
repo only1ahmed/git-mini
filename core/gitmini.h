@@ -2,6 +2,7 @@
 
 #include <string>
 #include "gitminiHelper.h"
+#include <unordered_map>
 #include <unordered_set>
 #include <filesystem>
 #include <vector>
@@ -9,10 +10,6 @@
 namespace fs = std::filesystem;
 
 class gitmini {
-
-private:
-    std::unordered_set<fs::path> stagedFiles;
-    std::unordered_set<fs::path> ignoredFiles;
 
 public:
     inline static const fs::path baseFolderPath = ".gitmini";
@@ -24,18 +21,17 @@ public:
     inline static const fs::path stageTracer = infoFolder / "staged";
     inline static const fs::path branchTracer = infoFolder / "current";
 
+    std::unordered_map<fs::path, std::vector<std::string>> stagedChanges;
+    std::unordered_set<fs::path> ignoredFiles;
+    std::string commitRoot;
+
     gitmini();
-
-//    gitmini(std::string);
-
-    void loadStagedFiles();
-
-
-    void loadBaseFolder();
 
     void init();
 
     void add(const std::vector<fs::path> &);
+
+    void rm(const std::vector<fs::path> &);
 
     void commit(const std::vector<std::string> &);
 

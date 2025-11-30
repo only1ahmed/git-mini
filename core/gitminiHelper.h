@@ -1,17 +1,19 @@
 #pragma once
 
-#include <unordered_set>
+#include <unordered_map>
 #include <string>
 #include <filesystem>
 #include <map>
+#include <vector>
+#include <unordered_set>
 
 namespace fs = std::filesystem;
 namespace gitminiHelper {
 
+//    std::string FILESHEADER = "blob ";
+
     template<typename T>
     concept StringOrPath = std::is_same_v<T, std::string> || std::is_same_v<T, fs::path>;
-
-    void loadFiles(std::unordered_set<fs::path> &files, const fs::path &fileDirectory);
 
     std::string processDirectoryTree(const fs::path &root);
 
@@ -21,7 +23,24 @@ namespace gitminiHelper {
     template<StringOrPath T>
     void saveObject(const std::string &hash, const T &content, const std::string &header);
 
+    std::string readObject(const std::string &);
+
     std::string structureCommit(const std::map<std::string, std::string> &);
 
     std::string objectHeader(const std::string &type, int contentSize);
+
+    void
+    loadStagedChanges(std::unordered_map<fs::path, std::vector<std::string>> &files, const fs::path &fileDirectory);
+
+    void
+    saveStagedChanges(std::unordered_map<fs::path, std::vector<std::string>> &files, const fs::path &fileDirectory);
+
+    std::string findFileHash(const fs::path &, const std::string &);
+
+    void loadIgnored(std::unordered_set<fs::path> &, const fs::path &);
+
+    void loadCurrentCommit(std::string &, const fs::path &);
+
+    std::string hashToPath(std::string);
+
 }

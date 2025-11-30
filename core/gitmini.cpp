@@ -8,14 +8,6 @@
 namespace fs = std::filesystem;
 
 
-void gitmini::loadBaseFolder() {
-    if (not fs::exists(this->baseFolderPath)) {
-        std::cerr << "Error: Didn't find a repository in the current directory."
-                  << std::endl;
-    }
-
-}
-
 //TODO: load tree folder
 // tree folder will contain hashes of branch names as folders.
 // each folder will contain the parents and children information (names).
@@ -26,10 +18,10 @@ void gitmini::loadBaseFolder() {
 gitmini::gitmini() {
     // Load staged files.
 //    this->loadBaseFolder();
-    if (fs::exists(gitmini::baseFolderPath)) {
-        gitminiHelper::loadFiles(this->stagedFiles, gitmini::stageTracer);
-        gitminiHelper::loadFiles(this->ignoredFiles, gitmini::ignoredFilesPath);
-    }
+//    if (fs::exists(gitmini::baseFolderPath)) {
+//        gitminiHelper::loadStagedChanges(this->stagedChanges, gitmini::stageTracer);
+//        gitminiHelper::loadStagedChanges(this->ignoredFiles, gitmini::ignoredFilesPath);
+//    }
 
 //    this->loadStagedFiles();
 //    this->loadIgnoredFiles();

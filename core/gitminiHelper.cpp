@@ -9,11 +9,29 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
+#include <sstream>
 
 const size_t BUFFER_SIZE = (1 << 16); //64 kb
 const std::vector<std::string> COMMITELEMENTS = {"parent", "root", "message"};
 
-void gitminiHelper::loadFiles(std::unordered_set<fs::path> &files, const fs::path &fileDirectory) {
+void gitminiHelper::loadCurrentCommit(std::string &refCurrentCommit, const fs::path &filePath) {
+    std::ifstream file(filePath);
+    file >> refCurrentCommit;
+}
+
+void gitminiHelper::loadIgnored(std::unordered_set<fs::path> &ignoredFiles, const fs::path &filePath) {
+    std::ifstream file(filePath);
+    std::string path;
+    while (file >> path) {
+        ignoredFiles.insert(fs::path(path));
+    }
+
+}
+
+
+void
+gitminiHelper::loadStagedChanges(std::unordered_map<fs::path, std::vector<std::string>> &files,
+                                 const fs::path &fileDirectory) {
 
     if (not fs::exists(fileDirectory)) {
         std::cerr << "Error: Didn't find: " << fileDirectory.string() << std::endl;
@@ -25,14 +43,50 @@ void gitminiHelper::loadFiles(std::unordered_set<fs::path> &files, const fs::pat
         std::cerr << "Error: Found, Failed to open and write on " << fileDirectory.string() << std::endl;
         return;
     }
-    std::string line;
-    while (std::getline(infile, line)) {
-        if (!line.empty()) {
-            files.insert(line);
+    std::stringstream ss;
+    ss << infile.rdbuf();
+    std::string type, operation, hash;
+    std::string path;
+    while (ss >> path) {
+        if (path.empty()) {
+            break;
         }
+        ss >> type >> operation;
+        files[path].push_back(type);
+        files[path].push_back(operation);
+        if (type == "file" && operation == "alter") {
+            ss >> hash;
+            files[path].push_back(hash);
+        }
+
     }
 }
 
+void gitminiHelper::saveStagedChanges(std::unordered_map<fs::path, std::vector<std::string>> &files,
+                                      const fs::path &fileDirectory) {
+
+    std::ofstream outFile(fileDirectory);
+    if (!outFile) {
+        std::cerr << "Error: Failed to create or write on " << fileDirectory.string() << std::endl;
+        return;
+    }
+
+    std::string type, operation, hash;
+    std::string path;
+    std::string result;
+    for (auto file: files) {
+        path = file.first.string();
+        type = file.second[0];
+        operation = file.second[1];
+        result += path + ' ' + type + ' ' + operation + ' ';
+        if (type == "file" && operation == "alter") {
+            hash = file.second[2];
+            result += hash;
+        }
+        result += '\n';
+    }
+    outFile << result;
+}
 
 template<gitminiHelper::StringOrPath T>
 std::string gitminiHelper::hashFile(const T &content, std::string header) {
@@ -93,7 +147,7 @@ std::string gitminiHelper::hashFile(const T &content, std::string header) {
 template<gitminiHelper::StringOrPath T>
 void gitminiHelper::saveObject(const std::string &hash, const T &content, const std::string &header) {
 
-    fs::path hashPath = hash.substr(0, 2) + '/' + hash.substr(2);
+    fs::path hashPath = gitminiHelper::hashToPath(hash);
     fs::path filePath = gitmini::objectsFolderPath / hashPath;
 
     if (fs::exists(filePath)) {
@@ -171,6 +225,72 @@ std::string gitminiHelper::objectHeader(const std::string &type, int contentSize
     std::string result;
     result = type + ' ' + std::to_string(contentSize) + '\0';
     return result;
+}
+
+
+std::string gitminiHelper::findFileHash(const fs::path &f, const std::string &r) {
+    fs::path filePath = f;
+    std::string rootHash = r;
+    while (true) {
+
+        std::string treeContent = gitminiHelper::readObject(rootHash);
+
+        std::stringstream ss(treeContent);
+        std::string type, name, hash;
+        bool found = false;
+        while (ss >> type) {
+            ss >> name;
+            ss >> hash;
+            if (name == filePath.begin()->string()) {
+                found = true;
+                break;
+            }
+
+        }
+        // a new file is created
+        if (not found) {
+            return "";
+        }
+        if (type == "blob") {
+            return hash;
+        }
+        std::filesystem::path newPath;
+
+        bool first = true;
+        for (const auto &part: filePath) {
+            if (first) {
+                first = false;
+                continue;
+            }
+            newPath /= part;
+        }
+        filePath = newPath;
+        rootHash = hash;
+
+    }
+}
+
+//TODO: test when there is an existing commit tree.
+std::string gitminiHelper::readObject(const std::string &hash) {
+    fs::path hashPath = gitminiHelper::hashToPath(hash);
+    fs::path rootPath = gitmini::objectsFolderPath / hashPath;
+
+    std::ifstream tree(rootPath, std::ios::binary);
+    std::vector<char> buffer((std::istreambuf_iterator<char>(tree)),
+                             std::istreambuf_iterator<char>());
+    std::string content(buffer.data(), buffer.size());
+    std::string objectContent;
+    if (not content.empty()) {
+        objectContent = content.substr(content.find('\0'));
+    }
+    return objectContent;
+}
+
+std::string gitminiHelper::hashToPath(std::string hash) {
+    if (hash.size() != (SHA256_DIGEST_LENGTH * 2)) {
+        throw std::runtime_error("Error: passed hash is not valid.");
+    }
+    return hash.substr(0, 2) + '/' + hash.substr(2);
 }
 
 // to ignore the SHA256 deprecation
