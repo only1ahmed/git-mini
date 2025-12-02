@@ -6,31 +6,15 @@
 
 namespace fs = std::filesystem;
 
-//TODO: make sure the paths that come to "add" are valid paths (exists and withing the repo folder) and that the repo exists.
-
-
-// this should return the paths that we are going to process.
-std::vector<fs::path> navigate() {
-//    if (*args.begin() == ".") {
-//
-//    }
-}
-
-//TODO: apply gitmini diff to know whether a file had changes or not before staging it.
-void gitmini::add(const std::vector<fs::path> &args) {
-
-//    navigate();
-
+void gitmini::rm(const std::vector<fs::path> &args) {
     if (args.empty()) {
         std::cerr << "Error: No files were provided" << std::endl;
         return;
     }
-    // load staged and ignored files and current commit.
     gitminiHelper::loadCurrentCommit(this->commitRoot, gitmini::branchTracer);
     gitminiHelper::loadStagedChanges(this->stagedChanges, gitmini::stageTracer);
     gitminiHelper::loadIgnored(this->ignoredFiles, gitmini::ignoredFilesPath);
 
-    // all these paths shall be files.
     for (const auto &filePath: args) {
         if ((this->ignoredFiles.count(filePath) > 0)) {
             continue;
@@ -40,18 +24,8 @@ void gitmini::add(const std::vector<fs::path> &args) {
             // throw an error
             continue;
         }
-
-        //hash the file.
-        std::string snapshotHash = gitminiHelper::hashFile(filePath,
-                                                           ("blob " + std::to_string(fs::file_size(filePath)) +
-                                                            '\0'));
-        //traverse the commit tree to get the file hash, then compare it to the snapshot hash to detect whether there are changes or not.
-        std::string fileHash = gitminiHelper::findFileHash(filePath, this->commitRoot);
-        if (fileHash == snapshotHash) {
-            continue;
-        }
+        
         //you have to delete the old snapshot to avoid overloading the memory.
-        //make sure not to create the file before deleting the old one.
         try {
             fs::path oldSnapshotPath;
             if (stagedChanges.count(filePath) > 0) {
@@ -63,13 +37,10 @@ void gitmini::add(const std::vector<fs::path> &args) {
         } catch (const std::filesystem::filesystem_error &e) {
             std::cerr << "Error deleting file: " << e.what() << "\n";
         }
-        gitminiHelper::saveObject(snapshotHash, filePath, ("blob " + std::to_string(fs::file_size(filePath)) +
-                                                           '\0'));
-        stagedChanges[filePath].type = gitminiHelper::stageObject::TYPE::FILE;
-        stagedChanges[filePath].operation = gitminiHelper::stageObject::OPERATION::ALTER;
-        stagedChanges[filePath].hash = snapshotHash;
 
-//        }
+        stagedChanges[filePath].type = gitminiHelper::stageObject::TYPE::FILE;
+        stagedChanges[filePath].operation = gitminiHelper::stageObject::OPERATION::DELETE;
+
 
         //save the stage tracer.
         gitminiHelper::saveStagedChanges(this->stagedChanges, gitmini::stageTracer);

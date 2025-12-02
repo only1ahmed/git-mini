@@ -14,6 +14,7 @@
 const size_t BUFFER_SIZE = (1 << 16); //64 kb
 const std::vector<std::string> COMMITELEMENTS = {"parent", "root", "message"};
 
+
 void gitminiHelper::loadCurrentCommit(std::string &refCurrentCommit, const fs::path &filePath) {
     std::ifstream file(filePath);
     file >> refCurrentCommit;
@@ -30,7 +31,7 @@ void gitminiHelper::loadIgnored(std::unordered_set<fs::path> &ignoredFiles, cons
 
 
 void
-gitminiHelper::loadStagedChanges(std::unordered_map<fs::path, std::vector<std::string>> &files,
+gitminiHelper::loadStagedChanges(std::unordered_map<fs::path, gitminiHelper::stageObject> &files,
                                  const fs::path &fileDirectory) {
 
     if (not fs::exists(fileDirectory)) {
@@ -45,24 +46,26 @@ gitminiHelper::loadStagedChanges(std::unordered_map<fs::path, std::vector<std::s
     }
     std::stringstream ss;
     ss << infile.rdbuf();
-    std::string type, operation, hash;
+    int type, operation;
+    std::string hash;
     std::string path;
     while (ss >> path) {
         if (path.empty()) {
             break;
         }
         ss >> type >> operation;
-        files[path].push_back(type);
-        files[path].push_back(operation);
-        if (type == "file" && operation == "alter") {
+        files[path].type = static_cast<gitminiHelper::stageObject::TYPE>(type);
+        files[path].operation = static_cast<gitminiHelper::stageObject::OPERATION>(operation);
+        if (type == gitminiHelper::stageObject::TYPE::FILE &&
+            operation == gitminiHelper::stageObject::OPERATION::ALTER) {
             ss >> hash;
-            files[path].push_back(hash);
+            files[path].hash = hash;
         }
 
     }
 }
 
-void gitminiHelper::saveStagedChanges(std::unordered_map<fs::path, std::vector<std::string>> &files,
+void gitminiHelper::saveStagedChanges(std::unordered_map<fs::path, gitminiHelper::stageObject> &files,
                                       const fs::path &fileDirectory) {
 
     std::ofstream outFile(fileDirectory);
@@ -71,16 +74,18 @@ void gitminiHelper::saveStagedChanges(std::unordered_map<fs::path, std::vector<s
         return;
     }
 
-    std::string type, operation, hash;
+    int type, operation;
+    std::string hash;
     std::string path;
     std::string result;
     for (auto file: files) {
         path = file.first.string();
-        type = file.second[0];
-        operation = file.second[1];
-        result += path + ' ' + type + ' ' + operation + ' ';
-        if (type == "file" && operation == "alter") {
-            hash = file.second[2];
+        type = file.second.type;
+        operation = file.second.operation;
+        result += path + ' ' + std::to_string(type) + ' ' + std::to_string(operation) + ' ';
+        if (type == gitminiHelper::stageObject::TYPE::FILE &&
+            operation == gitminiHelper::stageObject::OPERATION::ALTER) {
+            hash = file.second.hash;
             result += hash;
         }
         result += '\n';
@@ -117,7 +122,7 @@ std::string gitminiHelper::hashFile(const T &content, std::string header) {
 
         while (true) {
             file->read(reinterpret_cast<char *>(buffer.data()), buffer.size());
-            //gcount() returns the number of chars that had been extracted in the last operation
+            //gcount() returns the number of chars that had been extracted in the last OPERATION
             std::streamsize bytesRead = file->gcount();
             if (bytesRead > 0) {
                 SHA256_Update(&ctx, buffer.data(), bytesRead);

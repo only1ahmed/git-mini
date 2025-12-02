@@ -21,7 +21,7 @@ public:
     inline static const fs::path stageTracer = infoFolder / "staged";
     inline static const fs::path branchTracer = infoFolder / "current";
 
-    std::unordered_map<fs::path, std::vector<std::string>> stagedChanges;
+    std::unordered_map<fs::path, gitminiHelper::stageObject> stagedChanges;
     std::unordered_set<fs::path> ignoredFiles;
     std::string commitRoot;
 

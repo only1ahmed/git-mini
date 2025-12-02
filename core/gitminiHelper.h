@@ -9,7 +9,20 @@
 
 namespace fs = std::filesystem;
 namespace gitminiHelper {
-
+    class stageObject {
+    public:
+        enum OPERATION {
+            ALTER,
+            DELETE
+        };
+        enum TYPE {
+            FILE,
+            FOLDER
+        };
+        std::string hash;
+        OPERATION operation;
+        TYPE type;
+    };
 //    std::string FILESHEADER = "blob ";
 
     template<typename T>
@@ -30,10 +43,10 @@ namespace gitminiHelper {
     std::string objectHeader(const std::string &type, int contentSize);
 
     void
-    loadStagedChanges(std::unordered_map<fs::path, std::vector<std::string>> &files, const fs::path &fileDirectory);
+    loadStagedChanges(std::unordered_map<fs::path, gitminiHelper::stageObject> &files, const fs::path &fileDirectory);
 
     void
-    saveStagedChanges(std::unordered_map<fs::path, std::vector<std::string>> &files, const fs::path &fileDirectory);
+    saveStagedChanges(std::unordered_map<fs::path, gitminiHelper::stageObject> &files, const fs::path &fileDirectory);
 
     std::string findFileHash(const fs::path &, const std::string &);
 
@@ -42,5 +55,6 @@ namespace gitminiHelper {
     void loadCurrentCommit(std::string &, const fs::path &);
 
     std::string hashToPath(std::string);
+
 
 }
