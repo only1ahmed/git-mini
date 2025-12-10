@@ -57,7 +57,8 @@ gitminiHelper::loadStagedChanges(std::unordered_map<fs::path, gitminiHelper::sta
         files[path].type = static_cast<gitminiHelper::stageObject::TYPE>(type);
         files[path].operation = static_cast<gitminiHelper::stageObject::OPERATION>(operation);
         if (type == gitminiHelper::stageObject::TYPE::FILE &&
-            operation == gitminiHelper::stageObject::OPERATION::ALTER) {
+            (operation == gitminiHelper::stageObject::OPERATION::MODIFY ||
+             operation == gitminiHelper::stageObject::OPERATION::CREATE)) {
             ss >> hash;
             files[path].hash = hash;
         }
@@ -84,7 +85,8 @@ void gitminiHelper::saveStagedChanges(std::unordered_map<fs::path, gitminiHelper
         operation = file.second.operation;
         result += path + ' ' + std::to_string(type) + ' ' + std::to_string(operation) + ' ';
         if (type == gitminiHelper::stageObject::TYPE::FILE &&
-            operation == gitminiHelper::stageObject::OPERATION::ALTER) {
+            (operation == gitminiHelper::stageObject::OPERATION::MODIFY ||
+             operation == gitminiHelper::stageObject::OPERATION::CREATE)) {
             hash = file.second.hash;
             result += hash;
         }
@@ -155,68 +157,37 @@ void gitminiHelper::saveObject(const std::string &hash, const T &content, const 
     fs::path hashPath = gitminiHelper::hashToPath(hash);
     fs::path filePath = gitmini::objectsFolderPath / hashPath;
 
-    if (fs::exists(filePath)) {
-        return;
-    }
+    if (fs::exists(filePath)) return;
 
     std::unique_ptr<std::istream> file;
 
     if constexpr (std::is_same_v<T, std::string>) {
-        file = std::make_unique<std::stringstream>(content, std::ios::binary);
+        file = std::make_unique<std::stringstream>(content, std::ios::in | std::ios::binary);
     } else if constexpr (std::is_same_v<T, fs::path>) {
         auto f = std::make_unique<std::ifstream>(content, std::ios::binary);
-        if (!*f) {
-            throw std::runtime_error("Failed to open file: " + content.string());
-        }
-        file = std::move(f); // transfer ownership to polymorphic pointer
+        if (!*f) throw std::runtime_error("Failed to open file: " + content.string());
+        file = std::move(f);
     }
+
     fs::create_directory(gitmini::objectsFolderPath / hash.substr(0, 2));
-    std::ofstream outputFile(filePath);
 
-    if (not outputFile.is_open()) {
-        throw std::runtime_error("Cannot open file: " + filePath.string());
-    }
-    outputFile << header;
-    outputFile << file->rdbuf();
-}
+    std::ofstream outputFile(filePath, std::ios::binary); // <-- binary mode
+    if (!outputFile.is_open()) throw std::runtime_error("Cannot open file: " + filePath.string());
 
-//TODO: redo the function in an iterative method to optimize memory.
+    // write header safely
+    outputFile.write(header.data(), header.size());
 
-std::string gitminiHelper::processDirectoryTree(const fs::path &root) {
-    std::map<fs::path, std::string> mp;
-    std::string treeContent;
-    try {
-        std::string hash, type;
-        for (const auto &entry: fs::directory_iterator(root)) {
-            std::string filename = entry.path().filename().string();
-            if (!filename.empty() && filename[0] == '.') {
-                continue;
-            }
-            if (entry.is_directory()) {  // Only subdirectories
-                hash = gitminiHelper::processDirectoryTree(entry.path());
-                type = "tree";
-            } else {
-                hash = gitminiHelper::hashFile(entry.path(),
-                                               ("blob " + std::to_string(fs::file_size(filename)) + '\0'));
-                saveObject(hash, entry.path(), ("blob " + std::to_string(fs::file_size(filename)) + '\0'));
-                type = "blob";
-            }
-            treeContent += type + ' ' + filename + ' ' + hash + '\n';
-
-        }
-        std::string treeHash = gitminiHelper::hashFile(treeContent,
-                                                       "tree " + std::to_string(treeContent.size()) + '\0');
-        //TODO: compress the tree object.
-        gitminiHelper::saveObject(treeHash, treeContent, "");
-
-        return treeHash;
-    } catch (const fs::filesystem_error &e) {
-        std::string msg = "process directory error: ";
-        msg += e.what();
-        throw std::runtime_error(msg);
+    // write file content safely
+//    file->seekg(0, std::ios::beg);
+    char buffer[4096];
+    while (file->read(buffer, sizeof(buffer)) || file->gcount() > 0) {
+        outputFile.write(buffer, file->gcount());
     }
 
+    // optional, but ensures everything is flushed
+    outputFile.flush();
 }
+
 
 std::string gitminiHelper::structureCommit(const std::map<std::string, std::string> &values) {
     std::string content;
@@ -256,7 +227,7 @@ std::string gitminiHelper::findFileHash(const fs::path &f, const std::string &r)
         if (not found) {
             return "";
         }
-        if (type == "blob") {
+        if (type == std::to_string(gitminiHelper::objectType::BLOB)) {
             return hash;
         }
         std::filesystem::path newPath;
@@ -298,6 +269,48 @@ std::string gitminiHelper::hashToPath(std::string hash) {
     return hash.substr(0, 2) + '/' + hash.substr(2);
 }
 
-// to ignore the SHA256 deprecation
 
+std::vector<gitminiHelper::treeFile> gitminiHelper::readTreeObject(std::string &hash) {
+    std::string content = gitminiHelper::readObject(hash);
+    std::stringstream ss(content);
+    int fileType;
+    std::string fileName, fileHash;
+    std::vector<gitminiHelper::treeFile> result;
+    while (ss >> fileType) {
+        ss >> fileName >> fileHash;
+        gitminiHelper::treeFile current;
+        current.type = static_cast<gitminiHelper::objectType>(fileType);
+        current.name = fileName;
+        current.hash = fileHash;
+        result.push_back(current);
+    }
+    return result;
+}
+
+// Explicit instantiations
+template void gitminiHelper::saveObject<std::string>(
+        const std::string &hash,
+        const std::string &content,
+        const std::string &header
+);
+
+template void gitminiHelper::saveObject<std::filesystem::path>(
+        const std::string &hash,
+        const fs::path &content,
+        const std::string &header
+);
+
+
+template std::string gitminiHelper::hashFile(
+        const std::string &content,
+        std::string header
+);
+
+template std::string gitminiHelper::hashFile(
+        const fs::path &content,
+        std::string header
+);
+
+
+// to ignore the SHA256 deprecation
 #pragma clang diagnostic pop

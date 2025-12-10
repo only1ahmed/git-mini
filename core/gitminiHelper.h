@@ -9,10 +9,16 @@
 
 namespace fs = std::filesystem;
 namespace gitminiHelper {
-    class stageObject {
-    public:
+    enum objectType {
+        BLOB,
+        TREE,
+        COMMIT,
+
+    };
+    struct stageObject {
         enum OPERATION {
-            ALTER,
+            MODIFY,
+            CREATE,
             DELETE
         };
         enum TYPE {
@@ -23,6 +29,14 @@ namespace gitminiHelper {
         OPERATION operation;
         TYPE type;
     };
+
+    struct treeFile {
+
+        std::string name, hash;
+        objectType type;
+    };
+
+
 //    std::string FILESHEADER = "blob ";
 
     template<typename T>
@@ -33,10 +47,16 @@ namespace gitminiHelper {
     template<StringOrPath T>
     std::string hashFile(const T &content, std::string header);
 
+    // templates init so the
     template<StringOrPath T>
     void saveObject(const std::string &hash, const T &content, const std::string &header);
 
-    std::string readObject(const std::string &);
+//    void saveObject(const std::string &hash, const std::string &content, const std::string &header);
+//
+//    void saveObject(const std::string &hash, const fs::path &content, const std::string &header);
+
+
+    std::string readObject(const std::string &hash);
 
     std::string structureCommit(const std::map<std::string, std::string> &);
 
@@ -55,6 +75,8 @@ namespace gitminiHelper {
     void loadCurrentCommit(std::string &, const fs::path &);
 
     std::string hashToPath(std::string);
+
+    std::vector<gitminiHelper::treeFile> readTreeObject(std::string &hash);
 
 
 }
