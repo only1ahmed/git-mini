@@ -9,11 +9,6 @@
 
 namespace fs = std::filesystem;
 const std::string MAINBRANCHNAME = "main";
-//TODO:
-// modify: "tracing current commit" file.
-//
-
-
 
 
 void gitmini::init() {
@@ -38,9 +33,12 @@ void gitmini::init() {
                                                                         {"root",    ""},
                                                                         {"message", ""}});
         std::string initCommitHash = gitminiHelper::hashFile(initCommitContent,
-                                                             gitminiHelper::objectHeader("commit",
-                                                                                         initCommitContent.size()));
-        gitminiHelper::saveObject(initCommitHash, initCommitContent, "");
+                                                             gitminiHelper::objectHeader(
+                                                                     std::to_string(gitminiHelper::objectType::COMMIT),
+                                                                     initCommitContent.size()));
+        gitminiHelper::saveObject(initCommitHash, initCommitContent, gitminiHelper::objectHeader(
+                std::to_string(gitminiHelper::objectType::COMMIT),
+                initCommitContent.size()));
         branchTracerFile << initCommitHash;
         branchTracerFile.close();
         std::ofstream mainBranchFile(gitmini::localHeadsFolderPath / MAINBRANCHNAME, std::ios::out);

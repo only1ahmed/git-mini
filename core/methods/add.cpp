@@ -43,8 +43,9 @@ void gitmini::add(const std::vector<fs::path> &args) {
 
         //hash the file.
         std::string snapshotHash = gitminiHelper::hashFile(filePath,
-                                                           ("blob " + std::to_string(fs::file_size(filePath)) +
-                                                            '\0'));
+                                                           gitminiHelper::objectHeader(
+                                                                   std::to_string(gitminiHelper::objectType::BLOB),
+                                                                   fs::file_size(filePath)));
         //traverse the commit tree to get the file hash, then compare it to the snapshot hash to detect whether there are changes or not.
         std::string fileHash = gitminiHelper::findFileHash(filePath, this->commitRoot);
         if (fileHash == snapshotHash) {
@@ -63,15 +64,21 @@ void gitmini::add(const std::vector<fs::path> &args) {
         } catch (const std::filesystem::filesystem_error &e) {
             std::cerr << "Error deleting file: " << e.what() << "\n";
         }
-        gitminiHelper::saveObject(snapshotHash, filePath, ("blob " + std::to_string(fs::file_size(filePath)) +
-                                                           '\0'));
+        gitminiHelper::saveObject(snapshotHash, filePath,
+                                  gitminiHelper::objectHeader(std::to_string(gitminiHelper::objectType::BLOB),
+                                                              fs::file_size(filePath)));
         stagedChanges[filePath].type = gitminiHelper::stageObject::TYPE::FILE;
-        stagedChanges[filePath].operation = gitminiHelper::stageObject::OPERATION::ALTER;
+        if (fileHash != "") {
+
+            stagedChanges[filePath].operation = gitminiHelper::stageObject::OPERATION::MODIFY;
+        } else {
+            stagedChanges[filePath].operation = gitminiHelper::stageObject::OPERATION::CREATE;
+        }
         stagedChanges[filePath].hash = snapshotHash;
 
 //        }
 
         //save the stage tracer.
-        gitminiHelper::saveStagedChanges(this->stagedChanges, gitmini::stageTracer);
     }
+    gitminiHelper::saveStagedChanges(this->stagedChanges, gitmini::stageTracer);
 }
