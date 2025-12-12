@@ -150,9 +150,11 @@ std::string gitminiHelper::hashFile(const T &content, std::string header) {
     }
 }
 
-
+// there is a default value for writingMode which is std::ios::trunc
 template<gitminiHelper::StringOrPath T>
-void gitminiHelper::saveObject(const std::string &hash, const T &content, const std::string &header) {
+void
+gitminiHelper::saveObject(const std::string &hash, const T &content, const std::string &header,
+                          std::ios_base::openmode writingMode) {
 
     fs::path hashPath = gitminiHelper::hashToPath(hash);
     fs::path filePath = gitmini::objectsFolderPath / hashPath;
@@ -171,7 +173,7 @@ void gitminiHelper::saveObject(const std::string &hash, const T &content, const 
 
     fs::create_directory(gitmini::objectsFolderPath / hash.substr(0, 2));
 
-    std::ofstream outputFile(filePath, std::ios::binary); // <-- binary mode
+    std::ofstream outputFile(filePath, std::ios::binary | writingMode);
     if (!outputFile.is_open()) throw std::runtime_error("Cannot open file: " + filePath.string());
 
     // write header safely
@@ -203,7 +205,7 @@ std::string gitminiHelper::objectHeader(const std::string &type, int contentSize
     return result;
 }
 
-
+// TODO: optimize the findFileHash function to start traversing from the given root instead of expecting always the currentCommitRoot
 std::string gitminiHelper::findFileHash(const fs::path &f, const std::string &r) {
     fs::path filePath = f;
     std::string rootHash = r;
@@ -226,6 +228,10 @@ std::string gitminiHelper::findFileHash(const fs::path &f, const std::string &r)
         // a new file is created
         if (not found) {
             return "";
+        }
+        // finally found the file/folder we are searching for...
+        if (std::distance(filePath.begin(), filePath.end()) == 1) {
+            return hash;
         }
         if (type == std::to_string(gitminiHelper::objectType::BLOB)) {
             return hash;
@@ -270,34 +276,79 @@ std::string gitminiHelper::hashToPath(std::string hash) {
 }
 
 
-std::vector<gitminiHelper::treeFile> gitminiHelper::readTreeObject(std::string &hash) {
+std::unordered_map<fs::path, gitminiHelper::treeFile> gitminiHelper::readTreeObject(std::string &hash) {
     std::string content = gitminiHelper::readObject(hash);
     std::stringstream ss(content);
     int fileType;
     std::string fileName, fileHash;
-    std::vector<gitminiHelper::treeFile> result;
+    std::unordered_map<fs::path, gitminiHelper::treeFile> result;
     while (ss >> fileType) {
         ss >> fileName >> fileHash;
         gitminiHelper::treeFile current;
         current.type = static_cast<gitminiHelper::objectType>(fileType);
         current.name = fileName;
         current.hash = fileHash;
-        result.push_back(current);
+        result[fs::path(fileName)] = current;
     }
     return result;
 }
+
+int gitminiHelper::countFilesTreeHash(std::string &hash) {
+    std::string content = gitminiHelper::readObject(hash);
+    std::stringstream ss(content);
+    std::string line;
+    int result = 0;
+    while (std::getline(ss, line)) {
+        result++;
+    }
+    return result;
+}
+
+std::string gitminiHelper::structureTreeObject(std::unordered_map<fs::path, gitminiHelper::treeFile> &treeFiles) {
+    std::string result;
+    for (auto &file: treeFiles) {
+        std::string type = std::to_string(file.second.type);
+        std::string name = file.second.name;
+        std::string hash = file.second.hash;
+        result += type + ' ' + name + ' ' + hash + '\n';
+
+    }
+    return result;
+}
+
+gitminiHelper::commitObject gitminiHelper::readCommitHash(std::string &hash) {
+    std::string content = gitminiHelper::readObject(hash);
+    std::stringstream ss(content);
+    std::string key, val;
+    gitminiHelper::commitObject result;
+
+    std::unordered_map<std::string, std::string> tmpMap;
+
+    while (ss >> key) {
+        ss >> val;
+        tmpMap[key] = val;
+    }
+    result.parent = tmpMap["parent"];
+    result.root = tmpMap["root"];
+    result.message = tmpMap["message"];
+    return result;
+}
+
 
 // Explicit instantiations
 template void gitminiHelper::saveObject<std::string>(
         const std::string &hash,
         const std::string &content,
-        const std::string &header
+        const std::string &header,
+        std::ios_base::openmode
+
 );
 
 template void gitminiHelper::saveObject<std::filesystem::path>(
         const std::string &hash,
         const fs::path &content,
-        const std::string &header
+        const std::string &header,
+        std::ios_base::openmode
 );
 
 

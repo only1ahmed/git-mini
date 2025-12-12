@@ -25,6 +25,7 @@ namespace gitminiHelper {
             FILE,
             FOLDER
         };
+        fs::path path;
         std::string hash;
         OPERATION operation;
         TYPE type;
@@ -36,6 +37,14 @@ namespace gitminiHelper {
         objectType type;
     };
 
+    struct commitObject {
+        // parent hash
+        std::string parent;
+        // parent hash
+        std::string root;
+        std::string message;
+
+    };
 
 //    std::string FILESHEADER = "blob ";
 
@@ -47,14 +56,10 @@ namespace gitminiHelper {
     template<StringOrPath T>
     std::string hashFile(const T &content, std::string header);
 
-    // templates init so the
+
     template<StringOrPath T>
-    void saveObject(const std::string &hash, const T &content, const std::string &header);
-
-//    void saveObject(const std::string &hash, const std::string &content, const std::string &header);
-//
-//    void saveObject(const std::string &hash, const fs::path &content, const std::string &header);
-
+    void saveObject(const std::string &hash, const T &content, const std::string &header,
+                    std::ios_base::openmode writingMode = std::ios::trunc);
 
     std::string readObject(const std::string &hash);
 
@@ -76,7 +81,11 @@ namespace gitminiHelper {
 
     std::string hashToPath(std::string);
 
-    std::vector<gitminiHelper::treeFile> readTreeObject(std::string &hash);
+    std::unordered_map<fs::path, gitminiHelper::treeFile> readTreeObject(std::string &hash);
 
+    std::string structureTreeObject(std::unordered_map<fs::path, gitminiHelper::treeFile> &treeFiles);
 
+    int countFilesTreeHash(std::string &hash);
+
+    gitminiHelper::commitObject readCommitHash(std::string &hash);
 }

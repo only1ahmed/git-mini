@@ -6,12 +6,15 @@
 
 namespace fs = std::filesystem;
 
+// TODO: implement args navigation
+
+// TODO: handle the case when the passed argument does not exist in the commit tree. (it should matter because you might add another feature that confirms for the user that the change is staged)
+
 void gitmini::rm(const std::vector<fs::path> &args) {
     if (args.empty()) {
         std::cerr << "Error: No files were provided" << std::endl;
         return;
     }
-    gitminiHelper::loadCurrentCommit(this->commitRoot, gitmini::branchTracer);
     gitminiHelper::loadStagedChanges(this->stagedChanges, gitmini::stageTracer);
     gitminiHelper::loadIgnored(this->ignoredFiles, gitmini::ignoredFilesPath);
 
@@ -24,7 +27,7 @@ void gitmini::rm(const std::vector<fs::path> &args) {
             // throw an error
             continue;
         }
-        
+
         //you have to delete the old snapshot to avoid overloading the memory.
         try {
             fs::path oldSnapshotPath;

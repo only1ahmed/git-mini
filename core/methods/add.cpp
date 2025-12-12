@@ -10,13 +10,14 @@ namespace fs = std::filesystem;
 
 
 // this should return the paths that we are going to process.
-std::vector<fs::path> navigate() {
-//    if (*args.begin() == ".") {
-//
-//    }
-}
+//std::vector<fs::path> navigate() {
+////    if (*args.begin() == ".") {
+////
+////    }
+//}
 
-//TODO: apply gitmini diff to know whether a file had changes or not before staging it.
+// TODO: implement args navigation
+
 void gitmini::add(const std::vector<fs::path> &args) {
 
 //    navigate();
@@ -26,7 +27,8 @@ void gitmini::add(const std::vector<fs::path> &args) {
         return;
     }
     // load staged and ignored files and current commit.
-    gitminiHelper::loadCurrentCommit(this->commitRoot, gitmini::branchTracer);
+    gitminiHelper::loadCurrentCommit(this->currentCommitHash, gitmini::branchTracer);
+    std::string currentCommitRoot = gitminiHelper::readCommitHash(this->currentCommitHash).root;
     gitminiHelper::loadStagedChanges(this->stagedChanges, gitmini::stageTracer);
     gitminiHelper::loadIgnored(this->ignoredFiles, gitmini::ignoredFilesPath);
 
@@ -47,7 +49,7 @@ void gitmini::add(const std::vector<fs::path> &args) {
                                                                    std::to_string(gitminiHelper::objectType::BLOB),
                                                                    fs::file_size(filePath)));
         //traverse the commit tree to get the file hash, then compare it to the snapshot hash to detect whether there are changes or not.
-        std::string fileHash = gitminiHelper::findFileHash(filePath, this->commitRoot);
+        std::string fileHash = gitminiHelper::findFileHash(filePath, currentCommitRoot);
         if (fileHash == snapshotHash) {
             continue;
         }

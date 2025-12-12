@@ -23,7 +23,8 @@ public:
 
     std::unordered_map<fs::path, gitminiHelper::stageObject> stagedChanges;
     std::unordered_set<fs::path> ignoredFiles;
-    std::string commitRoot;
+    std::string currentCommitHash;
+
 
     gitmini();
 
