@@ -30,9 +30,11 @@ processDirectory(std::string oldCommitCurrentTreeHash, fs::path currentDirectory
         int pathSize = std::distance(change.first.begin(), change.first.end());
         // this is a file!
         if (pathSize == 1) {
-            if (file.type != gitminiHelper::stageObject::TYPE::FILE) {
+            if (not(file.type == gitminiHelper::stageObject::TYPE::FILE or
+                    file.type == gitminiHelper::stageObject::TYPE::FOLDER)) {
                 //TODO: raise and error here. where there is only one element left in the path but that element is not a file.
             }
+            //NOTE: there SHALL NOT be any folders that gets created or modified because folders cannot be modified and are only created once there are files inside of them (so creating a file inside the folder will create the folder automatically in the tree).
             if (file.operation == gitminiHelper::stageObject::OPERATION::MODIFY ||
                 file.operation == gitminiHelper::stageObject::OPERATION::CREATE) {
                 newCommitDirectoryHashes[file.path].type = gitminiHelper::objectType::BLOB;
@@ -42,6 +44,7 @@ processDirectory(std::string oldCommitCurrentTreeHash, fs::path currentDirectory
                     numFilesInDirectory++;
                 }
             }
+            // However, folders can be removed! as all files exist only because the folder exists in the parent's tree children.
             if (file.operation == gitminiHelper::stageObject::OPERATION::DELETE) {
                 newCommitDirectoryHashes.erase(file.path);
                 numFilesInDirectory--;
@@ -55,11 +58,11 @@ processDirectory(std::string oldCommitCurrentTreeHash, fs::path currentDirectory
         std::unordered_map<fs::path, gitminiHelper::stageObject> tempMap;
         for (auto &file: group.second) {
             fs::path newPath;
-            bool con = 1;
+            bool con = true;
             // trimming the first element of the path.
             for (auto &name: file.path) {
                 if (con) {
-                    con = 0;
+                    con = false;
                     continue;
                 }
                 newPath /= name;

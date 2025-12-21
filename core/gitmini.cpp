@@ -8,13 +8,6 @@
 namespace fs = std::filesystem;
 
 
-//TODO: load tree folder
-// tree folder will contain hashes of branch names as folders.
-// each folder will contain the parents and children information (names).
-// same logic with the content tree.
-// hash paths -> create folders of these hashes -> store in the folder the children and parents paths.
-// create a folder "objects" that will contain the files contents (perhaps compressed).
-// in objects, hash each file's (branch + path)
 gitmini::gitmini() {
     // Load staged files.
 //    this->loadBaseFolder();

@@ -30,9 +30,9 @@ public:
 
     void init();
 
-    void add(const std::vector<fs::path> &);
+    void add(const std::vector<std::string> &);
 
-    void rm(const std::vector<fs::path> &);
+    void rm(const std::vector<std::string> &);
 
     void commit(const std::vector<std::string> &);
 

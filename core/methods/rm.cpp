@@ -10,7 +10,7 @@ namespace fs = std::filesystem;
 
 // TODO: handle the case when the passed argument does not exist in the commit tree. (it should matter because you might add another feature that confirms for the user that the change is staged)
 
-void gitmini::rm(const std::vector<fs::path> &args) {
+void gitmini::rm(const std::vector<std::string> &args) {
     if (args.empty()) {
         std::cerr << "Error: No files were provided" << std::endl;
         return;
