@@ -99,6 +99,7 @@ void gitminiHelper::saveStagedChanges(std::unordered_map<fs::path, gitminiHelper
 template<gitminiHelper::StringOrPath T>
 std::string gitminiHelper::hashFile(const T &content, std::string header) {
 
+    
     std::vector<unsigned char> buffer(BUFFER_SIZE);
     try {
 
