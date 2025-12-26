@@ -334,6 +334,24 @@ gitminiHelper::commitObject gitminiHelper::readCommitHash(std::string &hash) {
     return result;
 }
 
+fs::path gitminiHelper::findInParentPath(const fs::path &start, const fs::path &target) {
+    fs::path current = start;
+
+    while (true) {
+        fs::path candidate = current / target;
+
+        if (fs::exists(candidate))
+            return current;
+
+        if (current == current.root_path())
+            break;
+
+        current = current.parent_path();
+    }
+
+    return {};
+}
+
 
 // Explicit instantiations
 template void gitminiHelper::saveObject<std::string>(

@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 class gitmini {
 
 public:
+
     inline static const fs::path baseFolderPath = ".gitmini";
     inline static const fs::path ignoredFilesPath = ".gitminiignore";
     inline static const fs::path objectsFolderPath = baseFolderPath / "objects";
@@ -19,8 +20,8 @@ public:
     inline static const fs::path localHeadsFolderPath = localRefsFolderPath / "heads";
     inline static const fs::path infoFolder = baseFolderPath / "info";
     inline static const fs::path stageTracer = infoFolder / "staged";
-    inline static const fs::path branchTracer = infoFolder / "current";
 
+    inline static const fs::path branchTracer = infoFolder / "current";
     std::unordered_map<fs::path, gitminiHelper::stageObject> stagedChanges;
     std::unordered_set<fs::path> ignoredFiles;
     std::string currentCommitHash;
@@ -35,6 +36,10 @@ public:
     void rm(const std::vector<std::string> &);
 
     void commit(const std::vector<std::string> &);
+
+    void checkout(const std::vector<std::string> &);
+
+    void branch(const std::vector<std::string> &);
 
 
 };

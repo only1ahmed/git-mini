@@ -88,4 +88,6 @@ namespace gitminiHelper {
     int countFilesTreeHash(std::string &hash);
 
     gitminiHelper::commitObject readCommitHash(std::string &hash);
+
+    fs::path findInParentPath(const fs::path &start, const fs::path &target);
 }

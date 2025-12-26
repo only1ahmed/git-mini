@@ -9,14 +9,21 @@ namespace fs = std::filesystem;
 
 
 gitmini::gitmini() {
-    // Load staged files.
-//    this->loadBaseFolder();
-//    if (fs::exists(gitmini::baseFolderPath)) {
-//        gitminiHelper::loadStagedChanges(this->stagedChanges, gitmini::stageTracer);
-//        gitminiHelper::loadStagedChanges(this->ignoredFiles, gitmini::ignoredFilesPath);
-//    }
+    try {
+        fs::path currentDirectory = gitminiHelper::findInParentPath(
+                fs::current_path(),
+                static_cast<fs::path>(baseFolderPath)
+        );
 
-//    this->loadStagedFiles();
-//    this->loadIgnoredFiles();
+        if (currentDirectory.empty()) {
+            throw fs::filesystem_error(
+                    "gitmini wasn't found", baseFolderPath, std::error_code()
+            );
+        }
 
+        fs::current_path(currentDirectory);
+    }
+    catch (const fs::filesystem_error &e) {
+        std::cerr << "Error in constructor: " << e.what() << std::endl;
+    }
 }
