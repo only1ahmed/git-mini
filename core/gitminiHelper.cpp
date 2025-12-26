@@ -77,13 +77,14 @@ void gitminiHelper::saveStagedChanges(std::unordered_map<fs::path, gitminiHelper
 
     int type, operation;
     std::string hash;
-    std::string path;
+    std::string pathHash;
     std::string result;
-    for (auto file: files) {
-        path = file.first.string();
+    for (const auto &file: files) {
+        std::string filePath = file.first.string();
+        pathHash = gitminiHelper::hashFile(filePath, "");
         type = file.second.type;
         operation = file.second.operation;
-        result += path + ' ' + std::to_string(type) + ' ' + std::to_string(operation) + ' ';
+        result += pathHash + ' ' + std::to_string(type) + ' ' + std::to_string(operation) + ' ';
         if (type == gitminiHelper::stageObject::TYPE::FILE &&
             (operation == gitminiHelper::stageObject::OPERATION::MODIFY ||
              operation == gitminiHelper::stageObject::OPERATION::CREATE)) {
@@ -104,7 +105,7 @@ std::string gitminiHelper::hashFile(const T &content, std::string header) {
         std::unique_ptr<std::istream> file;
 
         if constexpr (std::is_same_v<T, std::string>) {
-            file = std::make_unique<std::stringstream>(content, std::ios::binary);
+            file = std::make_unique<std::stringstream>(content);
         } else if constexpr (std::is_same_v<T, fs::path>) {
             auto f = std::make_unique<std::ifstream>(content, std::ios::binary);
             if (!*f) {
