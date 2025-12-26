@@ -53,6 +53,7 @@ gitminiHelper::loadStagedChanges(std::unordered_map<fs::path, gitminiHelper::sta
         if (path.empty()) {
             break;
         }
+        path = gitminiHelper::readObject(path);
         ss >> type >> operation;
         files[path].type = static_cast<gitminiHelper::stageObject::TYPE>(type);
         files[path].operation = static_cast<gitminiHelper::stageObject::OPERATION>(operation);
@@ -81,7 +82,12 @@ void gitminiHelper::saveStagedChanges(std::unordered_map<fs::path, gitminiHelper
     std::string result;
     for (const auto &file: files) {
         std::string filePath = file.first.string();
-        pathHash = gitminiHelper::hashFile(filePath, "");
+        pathHash = gitminiHelper::hashFile(filePath,
+                                           gitminiHelper::objectHeader(std::to_string(gitminiHelper::objectType::PATH),
+                                                                       filePath.size()));
+        gitminiHelper::saveObject(pathHash, filePath,
+                                  gitminiHelper::objectHeader(std::to_string(gitminiHelper::objectType::PATH),
+                                                              filePath.size()));
         type = file.second.type;
         operation = file.second.operation;
         result += pathHash + ' ' + std::to_string(type) + ' ' + std::to_string(operation) + ' ';
@@ -99,7 +105,6 @@ void gitminiHelper::saveStagedChanges(std::unordered_map<fs::path, gitminiHelper
 template<gitminiHelper::StringOrPath T>
 std::string gitminiHelper::hashFile(const T &content, std::string header) {
 
-    
     std::vector<unsigned char> buffer(BUFFER_SIZE);
     try {
 

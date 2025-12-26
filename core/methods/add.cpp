@@ -68,7 +68,8 @@ void gitmini::add(const std::vector<std::string> &args) {
         gitminiHelper::loadIgnored(this->ignoredFiles, gitmini::ignoredFilesPath);
 
         // all these paths shall be files.
-        for (const auto &filePath: files) {
+        for (const auto &file: files) {
+            fs::path filePath = fs::relative(file, fs::current_path());
             if ((this->ignoredFiles.count(filePath) > 0)) {
                 continue;
             }

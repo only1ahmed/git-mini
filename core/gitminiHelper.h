@@ -13,6 +13,7 @@ namespace gitminiHelper {
         BLOB,
         TREE,
         COMMIT,
+        PATH
 
     };
     struct stageObject {
