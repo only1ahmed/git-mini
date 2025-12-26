@@ -11,7 +11,14 @@ namespace fs = std::filesystem;
 namespace addCommands {
     std::vector<fs::path> all_entries(std::unordered_set<fs::path> &ignoredFiles) {
         std::vector<fs::path> result;
-        for (const fs::directory_entry &entry: fs::recursive_directory_iterator(fs::current_path())) {
+        for (auto it = fs::recursive_directory_iterator(fs::current_path());
+             it != fs::recursive_directory_iterator(); ++it) {
+            const fs::directory_entry &entry = *it;
+
+            if (entry.path() == (fs::current_path() / gitmini::baseFolderPath)) {
+                it.disable_recursion_pending();
+                continue;
+            }
             if (entry.is_regular_file() and (not ignoredFiles.contains(entry.path()))) {
                 result.push_back(entry.path());
             }
