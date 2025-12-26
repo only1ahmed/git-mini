@@ -263,7 +263,7 @@ std::string gitminiHelper::readObject(const std::string &hash) {
     std::string content(buffer.data(), buffer.size());
     std::string objectContent;
     if (not content.empty()) {
-        objectContent = content.substr(content.find('\0'));
+        objectContent = content.substr(content.find('\0') + 1);
     }
     return objectContent;
 }
@@ -282,6 +282,7 @@ std::unordered_map<fs::path, gitminiHelper::treeFile> gitminiHelper::readTreeObj
     int fileType;
     std::string fileName, fileHash;
     std::unordered_map<fs::path, gitminiHelper::treeFile> result;
+    ss.seekg(0);
     while (ss >> fileType) {
         ss >> fileName >> fileHash;
         gitminiHelper::treeFile current;
