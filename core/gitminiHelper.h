@@ -40,6 +40,7 @@ namespace gitminiHelper {
 
     struct commitObject {
         // parent hash
+        std::string branch;
         std::string parent;
         // parent hash
         std::string root;

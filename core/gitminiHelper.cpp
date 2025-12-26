@@ -12,7 +12,7 @@
 #include <sstream>
 
 const size_t BUFFER_SIZE = (1 << 16); //64 kb
-const std::vector<std::string> COMMITELEMENTS = {"parent", "root", "message"};
+const std::vector<std::string> COMMITELEMENTS = {"branch", "parent", "root", "message"};
 
 
 void gitminiHelper::loadCurrentCommit(std::string &refCurrentCommit, const fs::path &filePath) {
@@ -336,6 +336,7 @@ gitminiHelper::commitObject gitminiHelper::readCommitHash(std::string &hash) {
         ss >> val;
         tmpMap[key] = val;
     }
+    result.branch = tmpMap["branch"];
     result.parent = tmpMap["parent"];
     result.root = tmpMap["root"];
     result.message = tmpMap["message"];
