@@ -37,7 +37,8 @@ void gitmini::init() {
         gitminiHelper::saveObject(commitRootHash, commitContent, gitminiHelper::objectHeader(
                 std::to_string(gitminiHelper::objectType::COMMIT),
                 0));
-        std::string initCommitContent = gitminiHelper::structureCommit({{"parent",  "null"},
+        std::string initCommitContent = gitminiHelper::structureCommit({{"branch",  "main"},
+                                                                        {"parent",  "null"},
                                                                         {"root",    commitRootHash},
                                                                         {"message", "init"}});
         std::string initCommitHash = gitminiHelper::hashFile(initCommitContent,
