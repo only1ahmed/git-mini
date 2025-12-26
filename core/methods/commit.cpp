@@ -85,7 +85,7 @@ processDirectory(std::string oldCommitCurrentTreeHash, fs::path currentDirectory
         newCommitDirectoryHashes[currentDirectory / groupDir].type = gitminiHelper::objectType::TREE;
         newCommitDirectoryHashes[currentDirectory / groupDir].name = groupDir;
         newCommitDirectoryHashes[currentDirectory / groupDir].hash = result.first;
-
+        numFilesInDirectory += result.second;
 
     }
     std::string treeContent = gitminiHelper::structureTreeObject(newCommitDirectoryHashes);
