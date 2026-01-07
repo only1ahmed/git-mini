@@ -62,7 +62,7 @@ void gitmini::add(const std::vector<std::string> &args) {
 
 
         // load staged and ignored files and current commit.
-        gitminiHelper::loadCurrentCommit(this->currentCommitHash, gitmini::branchTracer);
+        gitminiHelper::loadCurrentStatus(this->currentCommitHash, gitmini::commitTracer);
         std::string currentCommitRoot = gitminiHelper::readCommitHash(this->currentCommitHash).root;
         gitminiHelper::loadStagedChanges(this->stagedChanges, gitmini::stageTracer);
         gitminiHelper::loadIgnored(this->ignoredFiles, gitmini::ignoredFilesPath);

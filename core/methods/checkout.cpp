@@ -68,8 +68,8 @@ void gitmini::checkout(const std::vector<std::string> &args) {
 
     commitProcessing(commitHash);
 
-    std::ofstream writeBranchTracerFile(gitmini::branchTracer, std::ios::out);
-    writeBranchTracerFile << commitHash;
-    writeBranchTracerFile.close();
+    std::ofstream writeCommitTracerFile(gitmini::commitTracer, std::ios::out);
+    writeCommitTracerFile << commitHash;
+    writeCommitTracerFile.close();
 
 }

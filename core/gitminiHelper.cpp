@@ -15,10 +15,11 @@ const size_t BUFFER_SIZE = (1 << 16); //64 kb
 const std::vector<std::string> COMMITELEMENTS = {"branch", "parent", "root", "message"};
 
 
-void gitminiHelper::loadCurrentCommit(std::string &refCurrentCommit, const fs::path &filePath) {
+void gitminiHelper::loadCurrentStatus(std::string &refCurrentCommit, const fs::path &filePath) {
     std::ifstream file(filePath);
     file >> refCurrentCommit;
 }
+
 
 void gitminiHelper::loadIgnored(std::unordered_set<fs::path> &ignoredFiles, const fs::path &filePath) {
     std::ifstream file(filePath);

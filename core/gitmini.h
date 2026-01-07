@@ -20,11 +20,13 @@ public:
     inline static const fs::path localHeadsFolderPath = localRefsFolderPath / "heads";
     inline static const fs::path infoFolder = baseFolderPath / "info";
     inline static const fs::path stageTracer = infoFolder / "staged";
+    inline static const fs::path commitTracer = infoFolder / "commit";
+    inline static const fs::path branchTracer = infoFolder / "branch";
 
-    inline static const fs::path branchTracer = infoFolder / "current";
     std::unordered_map<fs::path, gitminiHelper::stageObject> stagedChanges;
     std::unordered_set<fs::path> ignoredFiles;
     std::string currentCommitHash;
+    std::string currentBranch;
 
 
     gitmini();

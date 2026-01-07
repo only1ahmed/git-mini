@@ -75,11 +75,11 @@ namespace gitminiHelper {
     void
     saveStagedChanges(std::unordered_map<fs::path, gitminiHelper::stageObject> &files, const fs::path &fileDirectory);
 
-    std::string findFileHash(const fs::path &, const std::string &);
-
+    void loadCurrentStatus(std::string &refCurrentCommit, const fs::path &filePath);
+    
     void loadIgnored(std::unordered_set<fs::path> &, const fs::path &);
 
-    void loadCurrentCommit(std::string &, const fs::path &);
+    std::string findFileHash(const fs::path &, const std::string &);
 
     std::string hashToPath(std::string);
 
@@ -92,4 +92,5 @@ namespace gitminiHelper {
     gitminiHelper::commitObject readCommitHash(std::string &hash);
 
     fs::path findInParentPath(const fs::path &start, const fs::path &target);
+
 }

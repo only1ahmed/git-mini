@@ -29,6 +29,9 @@ void gitmini::init() {
         fs::create_directories(gitmini::infoFolder);
         std::ofstream(this->stageTracer, std::ios::out);
         std::ofstream branchTracerFile(gitmini::branchTracer, std::ios::out);
+        branchTracerFile << MAINBRANCHNAME;
+        branchTracerFile.close();
+        std::ofstream commitTracerFile(gitmini::commitTracer, std::ios::out);
         std::string commitContent = "";
         std::string commitRootHash = gitminiHelper::hashFile(commitContent,
                                                              gitminiHelper::objectHeader(
@@ -48,8 +51,8 @@ void gitmini::init() {
         gitminiHelper::saveObject(initCommitHash, initCommitContent, gitminiHelper::objectHeader(
                 std::to_string(gitminiHelper::objectType::COMMIT),
                 initCommitContent.size()));
-        branchTracerFile << initCommitHash;
-        branchTracerFile.close();
+        commitTracerFile << initCommitHash;
+        commitTracerFile.close();
         std::ofstream mainBranchFile(gitmini::localHeadsFolderPath / MAINBRANCHNAME, std::ios::out);
         mainBranchFile << initCommitHash;
         mainBranchFile.close();

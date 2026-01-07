@@ -112,7 +112,8 @@ void gitmini::commit(const std::vector<std::string> &args) {
 //    navigate()
 
     // load staged and current commit.
-    gitminiHelper::loadCurrentCommit(this->currentCommitHash, gitmini::branchTracer);
+    gitminiHelper::loadCurrentStatus(this->currentCommitHash, gitmini::commitTracer);
+    gitminiHelper::loadCurrentStatus(this->currentBranch, gitmini::branchTracer);
     gitminiHelper::loadStagedChanges(this->stagedChanges, gitmini::stageTracer);
 
     std::string &parentCommitHash = this->currentCommitHash;
@@ -120,7 +121,7 @@ void gitmini::commit(const std::vector<std::string> &args) {
     // get the root tree from processing the stages.
     std::string newCommitRoot = processDirectory(parentCommitData.root, "", this->stagedChanges).first;
 
-    std::string commitContent = gitminiHelper::structureCommit({{"branch",  parentCommitData.branch},
+    std::string commitContent = gitminiHelper::structureCommit({{"branch",  this->currentBranch},
                                                                 {"parent",  parentCommitHash},
                                                                 {"root",    newCommitRoot},
                                                                 {"message", msg}});
@@ -134,7 +135,7 @@ void gitmini::commit(const std::vector<std::string> &args) {
             commitContent.size()));
 
 
-    std::ofstream writeBranchTracerFile(gitmini::branchTracer, std::ios::out);
+    std::ofstream writeBranchTracerFile(gitmini::commitTracer, std::ios::out);
     writeBranchTracerFile << commitHash;
     writeBranchTracerFile.close();
     std::ofstream writeBranchHeadHash(gitmini::localHeadsFolderPath / parentCommitData.branch, std::ios::out);
